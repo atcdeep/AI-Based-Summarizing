@@ -6,3 +6,11 @@ scikit-learn
 joblib
 gunicorn
 PyPDF2
+python-docx
+pillow
+pytesseract
+nltk
+yake
+transformers
+torch
+openpyxl
