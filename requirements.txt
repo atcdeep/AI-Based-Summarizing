@@ -5,3 +5,4 @@ numpy
 scikit-learn
 joblib
 gunicorn
+PyPDF2
