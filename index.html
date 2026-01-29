@@ -1,0 +1,1034 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Document Analyzer</title>
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Roboto:wght@300;400;500&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Custom CSS -->
+    <style>
+        :root {
+            --primary-blue: #2c3e50;
+            --secondary-blue: #3498db;
+            --accent-green: #27ae60;
+            --accent-orange: #f39c12;
+            --accent-purple: #8e44ad;
+            --light-bg: #f8f9fa;
+            --card-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --card-radius: 12px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(135deg, #f5f7fa 0%, #e4e8f0 100%);
+            min-height: 100vh;
+            width: 100%;
+            overflow-x: hidden;
+        }
+
+        .navbar-custom {
+            background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue));
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            width: 100%;
+        }
+
+        .container-fluid {
+            padding-left: 0;
+            padding-right: 0;
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+        }
+
+        .main-wrapper {
+            width: 100%;
+            padding: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .input-section {
+            background: white;
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            padding: 25px;
+            margin-bottom: 30px;
+            width: 100%;
+        }
+
+        .output-section {
+            width: 100%;
+            display: none;
+        }
+
+        .card-custom {
+            border: none;
+            border-radius: var(--card-radius);
+            box-shadow: var(--card-shadow);
+            transition: transform 0.3s ease;
+            margin-bottom: 25px;
+            overflow: hidden;
+            width: 100%;
+        }
+
+        .card-custom:hover {
+            transform: translateY(-5px);
+        }
+
+        .card-header-custom {
+            background: linear-gradient(90deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            border-radius: var(--card-radius) var(--card-radius) 0 0 !important;
+            padding: 18px 25px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .summary-box {
+            border-left: 5px solid;
+            padding: 20px;
+            margin-bottom: 20px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.05);
+            height: 100%;
+        }
+
+        .extractive-box {
+            border-left-color: var(--secondary-blue);
+            background: linear-gradient(135deg, #f0f8ff 0%, #e3f2fd 100%);
+        }
+
+        .abstractive-box {
+            border-left-color: var(--accent-green);
+            background: linear-gradient(135deg, #f9fff9 0%, #e8f5e9 100%);
+        }
+
+        .keywords-box {
+            border-left-color: var(--accent-orange);
+            background: linear-gradient(135deg, #fffaf0 0%, #fff3e0 100%);
+        }
+
+        .topics-box {
+            border-left-color: var(--accent-purple);
+            background: linear-gradient(135deg, #f8f0ff 0%, #f3e5f5 100%);
+        }
+
+        .upload-area {
+            border: 2px dashed #3498db;
+            border-radius: var(--card-radius);
+            padding: 50px 30px;
+            text-align: center;
+            background: #f8f9fa;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        .upload-area:hover {
+            background: #e9ecef;
+            border-color: #2980b9;
+            transform: scale(1.01);
+        }
+
+        .btn-primary-custom {
+            background: linear-gradient(90deg, var(--secondary-blue), #2980b9);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+        }
+
+        .btn-primary-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(41, 128, 185, 0.3);
+        }
+
+        .btn-success-custom {
+            background: linear-gradient(90deg, var(--accent-green), #219653);
+            border: none;
+            padding: 12px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            font-size: 1rem;
+            width: 100%;
+        }
+
+        .btn-success-custom:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(33, 150, 83, 0.3);
+        }
+
+        .settings-row {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            height: 100%;
+        }
+
+        .stat-number {
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin: 10px 0;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.2);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .chat-message {
+            max-width: 85%;
+            margin-bottom: 15px;
+            padding: 15px 20px;
+            border-radius: 20px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .user-message {
+            background: linear-gradient(90deg, #e3f2fd, #bbdefb);
+            margin-left: auto;
+            border-bottom-right-radius: 5px;
+            margin-right: 10px;
+        }
+
+        .assistant-message {
+            background: linear-gradient(90deg, #f1f8e9, #dcedc8);
+            border-bottom-left-radius: 5px;
+            margin-left: 10px;
+        }
+
+        .keyword-tag {
+            display: inline-block;
+            background: linear-gradient(90deg, #e3f2fd, #bbdefb);
+            color: var(--secondary-blue);
+            padding: 8px 18px;
+            border-radius: 25px;
+            margin: 8px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+
+        .keyword-tag:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+
+        .highlight {
+            background-color: #fff9c4;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-weight: 500;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+
+        .loading-spinner {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: rgba(255,255,255,0.9);
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .spinner-border {
+            width: 3.5rem;
+            height: 3.5rem;
+            border-width: 0.3rem;
+        }
+
+        .text-preview-container {
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 20px;
+            border: 1px solid #dee2e6;
+            border-radius: 10px;
+            background: white;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.95rem;
+            line-height: 1.6;
+        }
+
+        .section-title {
+            color: var(--primary-blue);
+            font-weight: 600;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .alert-custom {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            z-index: 1000;
+            min-width: 300px;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            border: none;
+            border-radius: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .main-wrapper {
+                padding: 15px;
+            }
+            
+            .input-section {
+                padding: 20px;
+            }
+            
+            .upload-area {
+                padding: 30px 20px;
+            }
+            
+            .stat-number {
+                font-size: 1.8rem;
+            }
+            
+            .keyword-tag {
+                padding: 6px 14px;
+                margin: 5px;
+                font-size: 0.85rem;
+            }
+        }
+
+        @media (min-width: 1200px) {
+            .main-wrapper {
+                padding: 30px;
+            }
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #c1c1c1;
+            border-radius: 10px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #a8a8a8;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Bar -->
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-custom">
+        <div class="container-fluid">
+            <div class="container">
+                <a class="navbar-brand" href="#">
+                    <i class="fas fa-file-alt me-2"></i>
+                    <span style="font-family: 'Poppins', sans-serif; font-weight: 700;">AI Based Summarizing</span>
+                </a>
+                <div class="d-flex align-items-center">
+                    <span class="badge bg-warning me-3" style="font-size: 0.9rem;">AI-Powered</span>
+                    <button class="btn btn-outline-light btn-sm" id="darkModeToggle">
+                        <i class="fas fa-moon"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="main-wrapper">
+        <!-- INPUT SECTION - Top Full Width -->
+        <div class="input-section">
+            <h2 class="section-title"><i class="fas fa-upload me-2"></i>Upload & Analyze Document</h2>
+            
+            <div class="row">
+                <!-- Left Column - File Upload -->
+                <div class="col-lg-6">
+                    <div class="upload-area mb-4" id="uploadArea">
+                        <i class="fas fa-cloud-upload-alt fa-4x mb-3 text-primary"></i>
+                        <h4 class="mb-2">Upload Document</h4>
+                        <p class="text-muted mb-4">Supports: txt, pdf, docx, png, jpg, jpeg</p>
+                        <input type="file" id="fileInput" class="d-none" accept=".txt,.pdf,.docx,.png,.jpg,.jpeg">
+                        <button class="btn btn-primary-custom" onclick="document.getElementById('fileInput').click()">
+                            <i class="fas fa-folder-open me-2"></i>Browse Files
+                        </button>
+                        <p class="mt-3 mb-0 text-muted small">or drag and drop your file here</p>
+                    </div>
+
+                    <!-- Selected File Info -->
+                    <div id="fileInfo" class="mb-4" style="display: none;">
+                        <div class="alert alert-info d-flex justify-content-between align-items-center py-3">
+                            <div>
+                                <i class="fas fa-file me-2"></i>
+                                <strong id="fileName"></strong>
+                                <span class="badge bg-secondary ms-2" id="fileSize"></span>
+                            </div>
+                            <button class="btn btn-sm btn-outline-danger" onclick="clearFile()">
+                                <i class="fas fa-times"></i> Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Settings -->
+                <div class="col-lg-6">
+                    <div class="settings-row">
+                        <h5 class="mb-3"><i class="fas fa-cog me-2"></i>Analysis Settings</h5>
+                        
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Sample Fraction for Dataset</label>
+                            <select class="form-select" id="sampleFraction">
+                                <option value="0.1">10%</option>
+                                <option value="0.2">20%</option>
+                                <option value="0.3" selected>30%</option>
+                                <option value="0.4">40%</option>
+                                <option value="0.5">50%</option>
+                            </select>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label fw-bold">
+                                Confidence Threshold: 
+                                <span class="badge bg-primary ms-2" id="thresholdValue">0.05</span>
+                            </label>
+                            <input type="range" class="form-range" id="confidenceThreshold" min="0" max="1" step="0.01" value="0.05">
+                            <div class="d-flex justify-content-between mt-1">
+                                <small>0.00</small>
+                                <small>0.25</small>
+                                <small>0.50</small>
+                                <small>0.75</small>
+                                <small>1.00</small>
+                            </div>
+                        </div>
+
+                        <!-- Dataset Stats -->
+                        <div class="row mt-4">
+                            <div class="col-md-6 mb-3">
+                                <div class="stat-card">
+                                    <i class="fas fa-database fa-2x mb-3"></i>
+                                    <div class="stat-label">Arxiv Dataset</div>
+                                    <div class="stat-number" id="arxivRows">13,469</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <div class="stat-card">
+                                    <i class="fas fa-chart-bar fa-2x mb-3"></i>
+                                    <div class="stat-label">Scopus Dataset</div>
+                                    <div class="stat-number" id="scopusRows">23,527</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Process Button -->
+            <div class="text-center mt-4">
+                <button class="btn btn-success-custom py-3" id="processBtn">
+                    <i class="fas fa-magic me-2"></i>Generate AI Analysis
+                </button>
+            </div>
+
+            <!-- Loading Spinner -->
+            <div class="loading-spinner" id="loadingSpinner">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <h5 class="mt-3">Processing Document...</h5>
+                <p class="text-muted">AI is analyzing your document. This may take a moment.</p>
+            </div>
+        </div>
+
+        <!-- Text Preview (Initially Hidden) -->
+        <div class="card-custom" id="textPreviewCard" style="display: none;">
+            <div class="card-header-custom">
+                <i class="fas fa-file-alt me-2"></i>Extracted Text Preview
+            </div>
+            <div class="card-body">
+                <div id="extractedText" class="text-preview-container"></div>
+            </div>
+        </div>
+
+        <!-- OUTPUT SECTION - Below Input (Initially Hidden) -->
+        <div class="output-section" id="outputSection">
+            <!-- Summaries Section -->
+            <h2 class="section-title mt-5"><i class="fas fa-chart-bar me-2"></i>Analysis Results</h2>
+            
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="summary-box extractive-box">
+                        <h5><i class="fas fa-puzzle-piece me-2"></i>Extractive Summary</h5>
+                        <p id="extractiveSummary" class="mt-3"></p>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="summary-box abstractive-box">
+                        <h5><i class="fas fa-lightbulb me-2"></i>Abstractive Summary</h5>
+                        <p id="abstractiveSummary" class="mt-3"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keywords & Topics -->
+            <div class="row mb-4">
+                <div class="col-lg-6">
+                    <div class="summary-box keywords-box">
+                        <h5><i class="fas fa-key me-2"></i>Extracted Keywords</h5>
+                        <div id="keywordsList" class="mt-3"></div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="summary-box topics-box">
+                        <h5><i class="fas fa-tags me-2"></i>Suggested Topics</h5>
+                        <div id="topicsList" class="mt-3"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Section -->
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card-custom">
+                        <div class="card-header-custom">
+                            <i class="fas fa-chart-pie me-2"></i>TF-IDF Similarity Analysis
+                        </div>
+                        <div class="card-body">
+                            <canvas id="similarityChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="card-custom">
+                        <div class="card-header-custom">
+                            <i class="fas fa-ruler me-2"></i>Summary Length Comparison
+                        </div>
+                        <div class="card-body">
+                            <canvas id="lengthChart" height="250"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Keyword Frequency -->
+            <div class="card-custom mt-4">
+                <div class="card-header-custom">
+                    <i class="fas fa-search me-2"></i>Keyword Frequency Analysis
+                </div>
+                <div class="card-body">
+                    <canvas id="keywordChart" height="300"></canvas>
+                </div>
+            </div>
+
+            <!-- Categories -->
+            <div class="card-custom mt-4">
+                <div class="card-header-custom">
+                    <i class="fas fa-project-diagram me-2"></i>Predicted Categories
+                </div>
+                <div class="card-body">
+                    <div id="categoriesList"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Custom JavaScript -->
+    <script>
+        // Initialize variables
+        let currentFile = null;
+        let analysisData = null;
+        let chatHistory = [];
+
+        // File upload handler
+        document.getElementById('fileInput').addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                currentFile = file;
+                document.getElementById('fileName').textContent = file.name;
+                document.getElementById('fileSize').textContent = formatFileSize(file.size);
+                document.getElementById('fileInfo').style.display = 'block';
+                
+                // Simulate text extraction
+                simulateTextExtraction(file);
+            }
+        });
+
+        // Format file size
+        function formatFileSize(bytes) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+        }
+
+        // Confidence threshold slider
+        document.getElementById('confidenceThreshold').addEventListener('input', function(e) {
+            document.getElementById('thresholdValue').textContent = parseFloat(e.target.value).toFixed(2);
+        });
+
+        // Process button handler
+        document.getElementById('processBtn').addEventListener('click', function() {
+            if (!currentFile) {
+                showAlert('Please upload a file first!', 'warning');
+                return;
+            }
+
+            showLoading(true);
+            
+            // Simulate processing delay
+            setTimeout(() => {
+                generateAnalysis();
+                showLoading(false);
+            }, 2000);
+        });
+
+        // Chat functionality
+        document.getElementById('sendMessage').addEventListener('click', sendMessage);
+        document.getElementById('chatInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') sendMessage();
+        });
+
+        function simulateTextExtraction(file) {
+            const sampleText = `ARTIFICIAL INTELLIGENCE RESEARCH PAPER
+
+Title: Advanced Machine Learning Techniques in Modern AI Systems
+
+Abstract:
+This comprehensive paper explores the latest advancements in artificial intelligence and machine learning. We delve into neural network architectures, deep learning algorithms, and their practical applications across various industries including healthcare, finance, and autonomous systems.
+
+Introduction:
+Artificial Intelligence (AI) represents one of the most transformative technologies of the 21st century. By enabling machines to learn from experience, adjust to new inputs, and perform human-like tasks, AI systems are revolutionizing how we interact with technology.
+
+Key Sections:
+1. Neural Networks and Deep Learning
+   - Convolutional Neural Networks (CNNs)
+   - Recurrent Neural Networks (RNNs)
+   - Generative Adversarial Networks (GANs)
+
+2. Natural Language Processing
+   - Transformers and BERT models
+   - Sentiment analysis
+   - Machine translation systems
+
+3. Computer Vision Applications
+   - Object detection
+   - Image segmentation
+   - Facial recognition
+
+4. Reinforcement Learning
+   - Q-learning algorithms
+   - Policy gradient methods
+   - Multi-agent systems
+
+Methodology:
+Our research employs a mixed-methods approach combining quantitative analysis of algorithm performance with qualitative assessment of real-world applications. We utilize TensorFlow and PyTorch frameworks for model development and evaluation.
+
+Results:
+Experimental results demonstrate significant improvements in accuracy and efficiency across all tested domains. The proposed architectures achieve state-of-the-art performance on benchmark datasets including ImageNet and COCO.
+
+Conclusion:
+The rapid evolution of AI technologies presents both opportunities and challenges. Future research directions include explainable AI, federated learning, and ethical AI development.
+
+References:
+[1] Goodfellow, I., et al. (2016). Deep Learning
+[2] Vaswani, A., et al. (2017). Attention Is All You Need
+[3] Silver, D., et al. (2017). Mastering the game of Go`;
+
+            const keywords = ['Artificial Intelligence', 'Machine Learning', 'Neural Networks', 'Deep Learning', 'Natural Language Processing', 'Computer Vision', 'Reinforcement Learning', 'TensorFlow', 'PyTorch'];
+            const highlightedText = highlightKeywords(sampleText, keywords);
+            
+            document.getElementById('extractedText').innerHTML = `<pre style="white-space: pre-wrap; font-family: inherit; margin: 0;">${highlightedText}</pre>`;
+            document.getElementById('textPreviewCard').style.display = 'block';
+        }
+
+        function highlightKeywords(text, keywords) {
+            let highlighted = text;
+            keywords.forEach(keyword => {
+                const regex = new RegExp(`\\b${keyword}\\b`, 'gi');
+                highlighted = highlighted.replace(regex, `<span class="highlight">${keyword}</span>`);
+            });
+            return highlighted;
+        }
+
+        function generateAnalysis() {
+            // Sample analysis data
+            analysisData = {
+                extractiveSummary: "This research paper examines advanced machine learning techniques in modern AI systems. It covers neural network architectures including CNNs, RNNs, and GANs, along with applications in natural language processing and computer vision. The methodology employs TensorFlow and PyTorch frameworks, showing significant improvements in accuracy across benchmark datasets.",
+                abstractiveSummary: "The paper provides a comprehensive overview of cutting-edge AI and machine learning methodologies. It explores various neural network architectures and their practical implementations, highlighting advancements in natural language processing and computer vision. The research demonstrates substantial performance enhancements using modern deep learning frameworks, while also addressing future directions in explainable and ethical AI development.",
+                keywords: ['Artificial Intelligence', 'Machine Learning', 'Neural Networks', 'Deep Learning', 'Natural Language Processing', 'Computer Vision', 'Reinforcement Learning', 'TensorFlow', 'PyTorch', 'Algorithms'],
+                topics: ['AI Research', 'Deep Learning', 'Neural Networks', 'NLP Applications', 'Computer Vision'],
+                similarity: 0.87,
+                lengths: {
+                    original: 1560,
+                    abstractive: 185,
+                    extractive: 240
+                },
+                keywordCounts: [
+                    {keyword: 'Artificial Intelligence', count: 18},
+                    {keyword: 'Machine Learning', count: 15},
+                    {keyword: 'Neural Networks', count: 12},
+                    {keyword: 'Deep Learning', count: 10},
+                    {keyword: 'Natural Language Processing', count: 8},
+                    {keyword: 'Computer Vision', count: 7},
+                    {keyword: 'TensorFlow', count: 6},
+                    {keyword: 'PyTorch', count: 5}
+                ],
+                categories: [
+                    {category: 'Computer Science', confidence: 94},
+                    {category: 'Artificial Intelligence', confidence: 91},
+                    {category: 'Machine Learning', confidence: 89},
+                    {category: 'Deep Learning', confidence: 85},
+                    {category: 'Natural Language Processing', confidence: 82},
+                    {category: 'Computer Vision', confidence: 78},
+                    {category: 'Data Science', confidence: 75}
+                ]
+            };
+
+            // Update UI with analysis results
+            updateAnalysisUI();
+            
+            // Show output section
+            document.getElementById('outputSection').style.display = 'block';
+            
+            // Scroll to results
+            setTimeout(() => {
+                document.getElementById('outputSection').scrollIntoView({ behavior: 'smooth' });
+            }, 100);
+            
+            showAlert('Analysis completed successfully!', 'success');
+        }
+
+        function updateAnalysisUI() {
+            // Update summaries
+            document.getElementById('extractiveSummary').textContent = analysisData.extractiveSummary;
+            document.getElementById('abstractiveSummary').textContent = analysisData.abstractiveSummary;
+            
+            // Update keywords and topics
+            document.getElementById('keywordsList').innerHTML = analysisData.keywords
+                .map(kw => `<span class="keyword-tag">${kw}</span>`).join('');
+            
+            document.getElementById('topicsList').innerHTML = analysisData.topics
+                .map(topic => `<span class="keyword-tag">${topic}</span>`).join('');
+            
+            // Update categories
+            updateCategories();
+            
+            // Create charts
+            createCharts();
+        }
+
+        function updateCategories() {
+            const container = document.getElementById('categoriesList');
+            container.innerHTML = analysisData.categories.map(cat => `
+                <div class="mb-3">
+                    <div class="d-flex justify-content-between mb-1">
+                        <span>${cat.category}</span>
+                        <span class="fw-bold">${cat.confidence}%</span>
+                    </div>
+                    <div class="progress" style="height: 10px;">
+                        <div class="progress-bar" role="progressbar" style="width: ${cat.confidence}%; background: linear-gradient(90deg, #3498db, #2980b9);"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function createCharts() {
+            // Similarity Chart (Doughnut)
+            const similarityCtx = document.getElementById('similarityChart').getContext('2d');
+            new Chart(similarityCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Similarity', 'Dissimilarity'],
+                    datasets: [{
+                        data: [analysisData.similarity * 100, (1 - analysisData.similarity) * 100],
+                        backgroundColor: ['#3498db', '#e74c3c'],
+                        borderWidth: 2,
+                        borderColor: '#fff',
+                        hoverOffset: 15
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    return `${context.label}: ${context.raw.toFixed(1)}%`;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Length Chart (Bar)
+            const lengthCtx = document.getElementById('lengthChart').getContext('2d');
+            new Chart(lengthCtx, {
+                type: 'bar',
+                data: {
+                    labels: ['Original Text', 'Abstractive Summary', 'Extractive Summary'],
+                    datasets: [{
+                        label: 'Word Count',
+                        data: [
+                            analysisData.lengths.original,
+                            analysisData.lengths.abstractive,
+                            analysisData.lengths.extractive
+                        ],
+                        backgroundColor: [
+                            'rgba(44, 62, 80, 0.8)',
+                            'rgba(39, 174, 96, 0.8)',
+                            'rgba(52, 152, 219, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgb(44, 62, 80)',
+                            'rgb(39, 174, 96)',
+                            'rgb(52, 152, 219)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Number of Words'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+
+            // Keyword Chart (Horizontal Bar)
+            const keywordCtx = document.getElementById('keywordChart').getContext('2d');
+            new Chart(keywordCtx, {
+                type: 'bar',
+                data: {
+                    labels: analysisData.keywordCounts.map(k => k.keyword),
+                    datasets: [{
+                        label: 'Frequency',
+                        data: analysisData.keywordCounts.map(k => k.count),
+                        backgroundColor: 'rgba(243, 156, 18, 0.8)',
+                        borderColor: 'rgb(243, 156, 18)',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Occurrence Count'
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
+            });
+        }
+
+        function sendMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            
+            if (!message) return;
+            
+            // Add user message to chat
+            addMessageToChat('user', message);
+            input.value = '';
+            
+            // Simulate AI response
+            setTimeout(() => {
+                const responses = [
+                    "Based on your document, I can elaborate on the neural network architectures mentioned, particularly CNNs and RNNs.",
+                    "The document highlights significant improvements in AI accuracy using TensorFlow and PyTorch. Would you like me to compare these frameworks?",
+                    "I noticed the paper discusses ethical AI development. This is a crucial aspect of modern AI research that addresses bias and transparency.",
+                    "The results section mentions state-of-the-art performance on ImageNet and COCO datasets. These are benchmark standards in computer vision research.",
+                    "Your document covers both theoretical concepts and practical applications. Which aspect would you like me to focus on?"
+                ];
+                
+                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
+                addMessageToChat('assistant', randomResponse);
+            }, 1000);
+        }
+
+        function addMessageToChat(sender, message) {
+            const chatContainer = document.getElementById('chatContainer');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `chat-message ${sender}-message`;
+            messageDiv.innerHTML = `<strong>${sender === 'user' ? '👤 You' : '🤖 Assistant'}:</strong> ${message}`;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        function clearFile() {
+            currentFile = null;
+            document.getElementById('fileInput').value = '';
+            document.getElementById('fileInfo').style.display = 'none';
+            document.getElementById('textPreviewCard').style.display = 'none';
+            document.getElementById('outputSection').style.display = 'none';
+        }
+
+        function showLoading(show) {
+            const spinner = document.getElementById('loadingSpinner');
+            const button = document.getElementById('processBtn');
+            
+            if (show) {
+                spinner.style.display = 'block';
+                button.disabled = true;
+                button.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Processing...';
+            } else {
+                spinner.style.display = 'none';
+                button.disabled = false;
+                button.innerHTML = '<i class="fas fa-magic me-2"></i>Generate AI Analysis';
+            }
+        }
+
+        function showAlert(message, type) {
+            const alertClass = {
+                'success': 'alert-success',
+                'warning': 'alert-warning',
+                'error': 'alert-danger'
+            }[type] || 'alert-info';
+            
+            // Remove existing alerts
+            document.querySelectorAll('.alert-custom').forEach(alert => alert.remove());
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert alert-custom ${alertClass} alert-dismissible fade show`;
+            alertDiv.innerHTML = `
+                <div class="d-flex align-items-center">
+                    <i class="fas fa-${type === 'success' ? 'check-circle' : type === 'warning' ? 'exclamation-triangle' : 'info-circle'} me-3 fs-4"></i>
+                    <div>
+                        <strong>${type === 'success' ? 'Success!' : type === 'warning' ? 'Warning!' : 'Info!'}</strong>
+                        <div>${message}</div>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            `;
+            
+            document.body.appendChild(alertDiv);
+            
+            // Auto remove after 4 seconds
+            setTimeout(() => {
+                if (alertDiv.parentNode) {
+                    alertDiv.remove();
+                }
+            }, 4000);
+        }
+
+        // Dark mode toggle
+        document.getElementById('darkModeToggle').addEventListener('click', function() {
+            document.body.classList.toggle('dark-mode');
+            const icon = this.querySelector('i');
+            if (document.body.classList.contains('dark-mode')) {
+                icon.className = 'fas fa-sun';
+                document.body.style.backgroundColor = '#1a1a1a';
+                document.body.style.color = '#ffffff';
+            } else {
+                icon.className = 'fas fa-moon';
+                document.body.style.backgroundColor = '';
+                document.body.style.color = '';
+            }
+        });
+
+        // Download button
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            showAlert('Excel report download would start in a real implementation!', 'success');
+        });
+
+        // Drag and drop functionality
+        const uploadArea = document.getElementById('uploadArea');
+        
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#2980b9';
+            uploadArea.style.backgroundColor = '#e9ecef';
+            uploadArea.style.transform = 'scale(1.02)';
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.borderColor = '#3498db';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+            uploadArea.style.transform = 'scale(1)';
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.borderColor = '#3498db';
+            uploadArea.style.backgroundColor = '#f8f9fa';
+            uploadArea.style.transform = 'scale(1)';
+            
+            if (e.dataTransfer.files.length) {
+                const file = e.dataTransfer.files[0];
+                document.getElementById('fileInput').files = e.dataTransfer.files;
+                const event = new Event('change', { bubbles: true });
+                document.getElementById('fileInput').dispatchEvent(event);
+                showAlert(`File "${file.name}" uploaded successfully!`, 'success');
+            }
+        });
+    </script>
+</body>
+</html>
